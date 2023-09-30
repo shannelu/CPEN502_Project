@@ -1,6 +1,6 @@
 package ece.cpen502;
 
-public interface NeuralNetInterface {
+public interface NeuralNetInterface extends CommonInterface {
 
     final double bias = 1.0; // The input for each neurons bias weight
 
