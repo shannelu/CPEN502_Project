@@ -176,7 +176,7 @@ public class NeuralNet implements NeuralNetInterface {
 
         // update weight
         for(int i=0; i< NumInputs+1; i++) {
-            for(int k=0; k<NumHidden; k++){
+            for(int k=0; k<NumHidden; k++) {
                 // For simplicity, using the same w1Delta[i][j] instead of the previous weight change
                 // also we have asked after the lecture because we are more focusing on the direction that the weight change
                 // shows us instead of the exact value of weight change, therefore, I think my simplification here is valid.
@@ -185,18 +185,12 @@ public class NeuralNet implements NeuralNetInterface {
             }
         }
 
-//        System.out.println("In backward Propagation");
-//        System.out.println("outputDelta" +Arrays.toString(outputDelta));
-//        System.out.println("hiddenDelta" + Arrays.toString(hiddenDelta));
-//        System.out.println(w2);
-//        System.out.println(w2Delta);
-//        System.out.println(w1);
-//        System.out.println(w1Delta);
 
     }
 
     @Override
     public double outputFor(double [] X){
+        // TODO
         return 0.0;
     }
 
@@ -207,10 +201,6 @@ public class NeuralNet implements NeuralNetInterface {
         forwardPropagation(X);
         for(int i=0; i<NumOutputs; i++){ // NumOutputs is 1 in this example
             Error[i] = argValue - outputLayer[i];
-//            Error[i] = Math.pow(error, 2) / 2;
-//            System.out.println("error within each training");
-//            System.out.println(Error[i]);
-//            System.out.println(Error[i]);
         }
         backPropagation();
         return Error[0]; // hardcode as the number of output is 1
@@ -220,11 +210,12 @@ public class NeuralNet implements NeuralNetInterface {
 
     @Override
     public void save(File argFile){
+        // TODO
 
     }
 
     @Override
     public void load(String argFileName) throws IOException{
-
+        // TODO
     }
 }
