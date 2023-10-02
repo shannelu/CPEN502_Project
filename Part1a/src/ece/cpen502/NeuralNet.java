@@ -144,7 +144,7 @@ public class NeuralNet implements NeuralNetInterface {
                 outputDelta[i] = outputLayer[i] * (1 - outputLayer[i]) * Error[i];
             } else { //bipolar : derivative is different!
                 //TODO
-                outputDelta[i] = outputLayer[i] * (1 - outputLayer[i]) * Error[i];
+                outputDelta[i] = (1 + outputLayer[i]) * (1 - outputLayer[i]) / 2 * Error[i];
             }
         }
 
@@ -169,7 +169,7 @@ public class NeuralNet implements NeuralNetInterface {
                     hiddenDelta[k] += hiddenLayer[k] * (1 - hiddenLayer[k]) * outputDelta[j] * w2[k][j];
                 } else {
                     //TODO: different derivative :)
-                    hiddenDelta[k] = hiddenLayer[k] * (1 - outputLayer[k]) * outputDelta[j] * w2[k][j];
+                    hiddenDelta[k] +=  (1 + hiddenLayer[k]) * (1 - hiddenLayer[k]) / 2  * outputDelta[j] * w2[k][j];
                 }
             }
         }
