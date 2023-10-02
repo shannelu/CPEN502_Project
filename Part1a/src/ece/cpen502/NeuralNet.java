@@ -15,7 +15,9 @@ public class NeuralNet implements NeuralNetInterface {
 
 
     private boolean dataRep = true; // true for binary, false for bipolar
-//    private double error_threshold = 0.05;
+    private double error_threshold = 0.05;
+    double errorSum = 0;
+//    private static ArrayList<Double> errorList = new ArrayList<Double>();
 
 
     //weights matrix for each layer
@@ -25,8 +27,6 @@ public class NeuralNet implements NeuralNetInterface {
     double[][] w1Delta = new double[NumInputs+1][NumHidden];
     double[][] w2Delta = new double[NumHidden+1][NumOutputs];
 
-    //
-//    double[] output = new double[];
 
     double[] inputLayer = new double[NumInputs + 1];
     double[] hiddenLayer = new double[NumHidden + 1];
@@ -34,7 +34,7 @@ public class NeuralNet implements NeuralNetInterface {
     double[] outputDelta = new double[NumOutputs];  //error signal
     double[] hiddenDelta = new double[NumHidden];
     double[] Error = new double[NumOutputs];
-    double[] errorSum = new double[NumOutputs];
+
 
 
 //    public NeuralNet(){
@@ -78,7 +78,6 @@ public class NeuralNet implements NeuralNetInterface {
                 w2[i][j] = Math.random() - 0.5;
             }
         }
-//        System.out.println("w1" + Arrays.toString(w1[1]));
     }
 
 
@@ -104,8 +103,6 @@ public class NeuralNet implements NeuralNetInterface {
         }
         inputLayer[input.length] = 1; // add bias term
 
-//        System.out.println("w1_0"+Arrays.toString(w1[0]));
-//        System.out.println("w1_1"+Arrays.toString(w1[1]));
 
         for(int j=0; j<NumHidden; j++){
             for(int i=0; i<NumInputs+1; i++){
@@ -130,10 +127,6 @@ public class NeuralNet implements NeuralNetInterface {
                 outputLayer[j] = sigmoid(outputLayer[j]);
             }
         }
-//        System.out.println("in forward propagation");
-//        System.out.println("inputLayer" + Arrays.toString(inputLayer));
-//        System.out.println("hiddenLayer" + Arrays.toString(hiddenLayer));
-//        System.out.println("outputLayer" + Arrays.toString(outputLayer));
     }
 
     public void backPropagation(){
@@ -152,20 +145,17 @@ public class NeuralNet implements NeuralNetInterface {
 //         System.out.println(NumHidden);
         for(int k=0; k<NumHidden+1; k++) {
             for (int j = 0; j < NumOutputs; j++) {
-//                System.out.printf("NumHidden:%d, Numoutput%d\n", k, j);
                 // same comment as above for choosing w2Delta[i][j]
                 w2Delta[k][j] = momentum * w2Delta[k][j] + learningRate * outputDelta[j] * hiddenLayer[k] ;
                 w2[k][j] += w2Delta[k][j];
             }
         }
 
-        //compute error signal when y is an hidden unit
+        //compute error signal when y is a hidden unit
         for(int k=0; k<NumHidden; k++){
             hiddenDelta[k] = 0;
             for(int j=0; j<NumOutputs; j++){
                 if(dataRep){
-//                    hiddenDelta[k] += customSigmoid(hiddenLayer[k]) * (1 - customSigmoid(hiddenLayer[k]))
-//                            * outputDelta[j] * w2[k][j];
                     hiddenDelta[k] += hiddenLayer[k] * (1 - hiddenLayer[k]) * outputDelta[j] * w2[k][j];
                 } else {
                     //TODO: different derivative :)
@@ -191,7 +181,12 @@ public class NeuralNet implements NeuralNetInterface {
     @Override
     public double outputFor(double [] X){
         // TODO
-        return 0.0;
+        if(Error[0] < error_threshold){
+            return outputLayer[0];
+        } else{
+            System.out.println("The neural net is not trained well yet.\n");
+            return 0.0;
+        }
     }
 
 
@@ -208,14 +203,16 @@ public class NeuralNet implements NeuralNetInterface {
 
 
 
+
     @Override
     public void save(File argFile){
-        // TODO
-
+        // TODO: no need for part 1a
     }
 
     @Override
     public void load(String argFileName) throws IOException{
-        // TODO
+        // TODO: no need for part 1a
     }
+
+
 }
