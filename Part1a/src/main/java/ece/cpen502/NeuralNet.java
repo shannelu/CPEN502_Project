@@ -1,4 +1,4 @@
-package ece.cpen502;
+package main.java.ece.cpen502;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,14 +10,11 @@ public class NeuralNet implements NeuralNetInterface {
     private int NumOutputs = 1;
     private double learningRate = 0.2;
     private double momentum = 0.0;
-//    private double A = -1;
-//    private double B = 1;
 
 
     private boolean dataRep = true; // true for binary, false for bipolar
     private double error_threshold = 0.05;
     double errorSum = 0;
-//    private static ArrayList<Double> errorList = new ArrayList<Double>();
 
 
     //weights matrix for each layer
@@ -37,10 +34,6 @@ public class NeuralNet implements NeuralNetInterface {
 
 
 
-//    public NeuralNet(){
-//        this(input,hidden,learningRate,momentum,A,B);
-//    }
-
     public NeuralNet(int argNumInputs, int argNumHidden, int argNumOutputs, double argLearningRate,
                      double argMomentumTerm, boolean argdataRep){
         this.NumInputs = argNumInputs;
@@ -48,8 +41,6 @@ public class NeuralNet implements NeuralNetInterface {
         this.NumOutputs = argNumOutputs;
         this.learningRate = argLearningRate;
         this.momentum = argMomentumTerm;
-//        this.A = argA;
-//        this.B = argB;
         this.dataRep = argdataRep; //true for binary
     }
 

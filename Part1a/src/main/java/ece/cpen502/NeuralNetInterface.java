@@ -1,4 +1,4 @@
-package ece.cpen502;
+package main.java.ece.cpen502;
 
 public interface NeuralNetInterface extends CommonInterface {
 
