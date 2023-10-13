@@ -10,38 +10,39 @@ public class NeuralNet implements NeuralNetInterface {
     private int NumOutputs = 1;
     private double learningRate = 0.2;
     private double momentum = 0.0;
+    double error_threshold = 0.05;
 
 
-    private boolean dataRep = true; // true for binary, false for bipolar
-    private double error_threshold = 0.05;
-    double errorSum = 0;
+    private boolean binary = true; // true for binary, false for bipolar
+
 
 
     //weights matrix for each layer
-    double[][] w1 = new double[NumInputs+1][NumHidden]; // add 1 for bias
+    double[][] w1 = new double[NumInputs+1][NumHidden+1]; // add 1 for bias
     double[][] w2 = new double[NumHidden+1][NumOutputs];
 
-    double[][] w1Delta = new double[NumInputs+1][NumHidden];
+    double[][] w1Delta = new double[NumInputs+1][NumHidden+1];
     double[][] w2Delta = new double[NumHidden+1][NumOutputs];
+    double[][] savedlastDeltaWeight1 = new double[NumInputs+1][NumHidden+1];
+    double[][] savedlastDeltaWeight2 = new double[NumHidden+1][NumOutputs];
 
 
     double[] inputLayer = new double[NumInputs + 1];
     double[] hiddenLayer = new double[NumHidden + 1];
     double[] outputLayer = new double[NumOutputs];
     double[] outputDelta = new double[NumOutputs];  //error signal
-    double[] hiddenDelta = new double[NumHidden];
+    double[] hiddenDelta = new double[NumHidden+1];
     double[] Error = new double[NumOutputs];
 
 
-
     public NeuralNet(int argNumInputs, int argNumHidden, int argNumOutputs, double argLearningRate,
-                     double argMomentumTerm, boolean argdataRep){
+                     double argMomentumTerm, boolean argbinary){
         this.NumInputs = argNumInputs;
         this.NumHidden = argNumHidden;
         this.NumOutputs = argNumOutputs;
         this.learningRate = argLearningRate;
         this.momentum = argMomentumTerm;
-        this.dataRep = argdataRep; //true for binary
+        this.binary = argbinary; //true for binary
     }
 
     @Override
@@ -61,12 +62,16 @@ public class NeuralNet implements NeuralNetInterface {
         for(int i=0; i< w1.length; i++){
             for(int j=0; j< w1[0].length; j++){
                 w1[i][j] = Math.random() - 0.5;
+                savedlastDeltaWeight1[i][j] = 0;
+                w1Delta[i][j] = 0;
             }
         }
 
         for(int i=0; i< w2.length; i++){
             for(int j=0; j< w2[0].length; j++){
                 w2[i][j] = Math.random() - 0.5;
+                savedlastDeltaWeight2[i][j] = 0;
+                w2Delta[i][j] = 0;
             }
         }
     }
@@ -74,7 +79,7 @@ public class NeuralNet implements NeuralNetInterface {
 
     @Override
     public void zeroWeights(){
-        // Initialize weights to random values to 0
+//         Initialize weights to random values to 0
         for(int i=0; i< w1.length; i++){
             for(int j=0; j< w1[0].length; j++){
                 w1[i][j] = 0;
@@ -96,10 +101,11 @@ public class NeuralNet implements NeuralNetInterface {
 
 
         for(int j=0; j<NumHidden; j++){
+            hiddenLayer[j] = 0;
             for(int i=0; i<NumInputs+1; i++){
                 hiddenLayer[j] += w1[i][j] * inputLayer[i];
             }
-            if(dataRep) { // binary
+            if(binary) { // binary
                 hiddenLayer[j] = customSigmoid(hiddenLayer[j]);
             } else { // bipolar
                 hiddenLayer[j] = sigmoid(hiddenLayer[j]);
@@ -109,10 +115,11 @@ public class NeuralNet implements NeuralNetInterface {
         hiddenLayer[NumHidden] = 1;
 
         for(int j=0; j<NumOutputs; j++){
+            outputLayer[j] = 0;
             for(int i=0; i<NumHidden+1; i++) {
                 outputLayer[j] += w2[i][j] * hiddenLayer[i];
             }
-            if (dataRep) { //binary
+            if (binary) { //binary
                 outputLayer[j] = customSigmoid(outputLayer[j]);
             } else{ //bipolar
                 outputLayer[j] = sigmoid(outputLayer[j]);
@@ -123,46 +130,44 @@ public class NeuralNet implements NeuralNetInterface {
     public void backPropagation(){
         //compute error signal when y is an output unit
         for(int i=0; i<NumOutputs; i++){
-            if(dataRep){ //binary
-//                outputDelta[i] = customSigmoid(outputLayer[i]) * (1 - customSigmoid(outputLayer[i])) * Error[i];
+            //TODO
+            outputDelta[i] = 0;
+            if(binary){ //binary
                 outputDelta[i] = outputLayer[i] * (1 - outputLayer[i]) * Error[i];
             } else { //bipolar : derivative is different!
-                //TODO
                 outputDelta[i] = (1 + outputLayer[i]) * (1 - outputLayer[i]) / 2 * Error[i];
             }
         }
 
-
-//         System.out.println(NumHidden);
-        for(int k=0; k<NumHidden+1; k++) {
-            for (int j = 0; j < NumOutputs; j++) {
-                // same comment as above for choosing w2Delta[i][j]
-                w2Delta[k][j] = momentum * w2Delta[k][j] + learningRate * outputDelta[j] * hiddenLayer[k] ;
+        // Update weights for hidden to output layer first
+        for (int j = 0; j < NumOutputs; j++) {
+            for(int k=0; k<NumHidden+1; k++) {
+//                w2Delta[k][j] = momentum * w2Delta[k][j] + learningRate * outputDelta[j] * hiddenLayer[k] ;
+                w2Delta[k][j] = momentum * savedlastDeltaWeight2[k][j] + learningRate * outputDelta[j] * hiddenLayer[k];
                 w2[k][j] += w2Delta[k][j];
+                savedlastDeltaWeight2[k][j] = w2Delta[k][j];
             }
         }
 
         //compute error signal when y is a hidden unit
-        for(int k=0; k<NumHidden; k++){
+        for(int k = 0; k<NumHidden; k++){
             hiddenDelta[k] = 0;
             for(int j=0; j<NumOutputs; j++){
-                if(dataRep){
+                if(binary){
                     hiddenDelta[k] += hiddenLayer[k] * (1 - hiddenLayer[k]) * outputDelta[j] * w2[k][j];
                 } else {
-                    //TODO: different derivative :)
                     hiddenDelta[k] +=  (1 + hiddenLayer[k]) * (1 - hiddenLayer[k]) / 2  * outputDelta[j] * w2[k][j];
                 }
             }
         }
 
-        // update weight
-        for(int i=0; i< NumInputs+1; i++) {
-            for(int k=0; k<NumHidden; k++) {
-                // For simplicity, using the same w1Delta[i][j] instead of the previous weight change
-                // also we have asked after the lecture because we are more focusing on the direction that the weight change
-                // shows us instead of the exact value of weight change, therefore, I think my simplification here is valid.
-                w1Delta[i][k]  = momentum * w1Delta[i][k] + learningRate * hiddenDelta[k] * inputLayer[i];
+        // Update weights for input to hidden layer
+        for(int k=0; k<NumHidden; k++) {
+            for(int i=0; i< NumInputs+1; i++) {
+//                w1Delta[i][k]  = momentum * w1Delta[i][k] + learningRate * hiddenDelta[k] * inputLayer[i];
+                w1Delta[i][k]  = momentum * savedlastDeltaWeight1[i][k] + learningRate * hiddenDelta[k] * inputLayer[i];
                 w1[i][k] += w1Delta[i][k];
+                savedlastDeltaWeight1[i][k] = w1Delta[i][k];
             }
         }
 
@@ -171,7 +176,7 @@ public class NeuralNet implements NeuralNetInterface {
 
     @Override
     public double outputFor(double [] X){
-        // TODO
+        // TODO: not used for part 1a
         if(Error[0] < error_threshold){
             return outputLayer[0];
         } else{
@@ -179,7 +184,6 @@ public class NeuralNet implements NeuralNetInterface {
             return 0.0;
         }
     }
-
 
     @Override
     // train the neutral net for one dataset
@@ -191,8 +195,6 @@ public class NeuralNet implements NeuralNetInterface {
         backPropagation();
         return Error[0]; // hardcode as the number of output is 1
     }
-
-
 
 
     @Override
