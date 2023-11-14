@@ -8,7 +8,7 @@ public class LookUpTable implements LUTInterface{
     private int enemyEnergy;
     private int DistanceToEnemy;
     private int DistanceToCenter;
-    private int Action;
+    private int ActionSize;
     private double[][][][][] LUT;
     // keep track of the used actions
     private int[][][][][] visits;
@@ -19,7 +19,7 @@ public class LookUpTable implements LUTInterface{
         this.enemyEnergy = enemyEnergy;
         this.DistanceToEnemy = DistanceToEnemy;
         this.DistanceToCenter = DistanceToCenter;
-        this.Action = Action;
+        this.ActionSize = Action;
         this.LUT = new double[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][Action];
         this.visits = new int[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][Action];
         initialiseLUT();
@@ -41,15 +41,17 @@ public class LookUpTable implements LUTInterface{
 
     public int getExploratoryMove() {
         Random ran = new Random();
-        return ran.nextInt(Action);
+        int res = ran.nextInt(ActionSize);
+        return res;
     }
 
+
     public int getGreedyMove(int myEnergy, int enemyEnergy, int DistanceToEnemy, int DistanceToCenter){
-        double max = -1;
+        double bestQ = -Double.MAX_VALUE;
         int GreedyAction = -1;
-        for(int i=0; i<Action; i++){
-            if(LUT[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][i] > max){
-                max = LUT[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][i];
+        for(int i=0; i<ActionSize; i++){
+            if(LUT[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][i] > bestQ){
+                bestQ = LUT[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][i];
                 GreedyAction = i;
             }
         }
@@ -77,6 +79,10 @@ public class LookUpTable implements LUTInterface{
         return 1;
     }
 
+    public double getValueFromLUT(int myEnergy, int enemyEnergy, int DistanceToEnemy, int DistanceToCenter, int ActionSize){
+        return LUT[myEnergy][enemyEnergy][DistanceToEnemy][DistanceToCenter][ActionSize];
+    }
+
     @Override
     public void save(File argFile) {
 
@@ -93,7 +99,7 @@ public class LookUpTable implements LUTInterface{
             for(int j = 0; j < enemyEnergy; j++) {
                 for(int k = 0; k < DistanceToEnemy; k++) {
                     for(int m = 0; m < DistanceToCenter; m++) {
-                        for(int n = 0; n < Action; n++) {
+                        for(int n = 0; n < ActionSize; n++) {
                             LUT[i][j][k][m][n] = Math.random();
                             visits[i][j][k][m][n] = 0;
                         }
@@ -140,11 +146,11 @@ public class LookUpTable implements LUTInterface{
         this.DistanceToCenter = DistanceToCenter;
     }
 
-    public int getAction(){
-        return Action;
+    public int getActionSize(){
+        return ActionSize;
     }
 
-    public void setAction(int Aciton){
-        this.Action = Aciton;
+    public void setActionSize(int Action){
+        this.ActionSize = Action;
     }
 }
