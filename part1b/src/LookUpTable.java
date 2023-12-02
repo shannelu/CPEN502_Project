@@ -1,5 +1,8 @@
+import robocode.RobocodeFileOutputStream;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Random;
 
 public class LookUpTable implements LUTInterface{
@@ -85,7 +88,45 @@ public class LookUpTable implements LUTInterface{
 
     @Override
     public void save(File argFile) {
+        //TODO: change this code
+        System.out.println("start saving");
 
+        PrintStream saveFile = null;
+
+        try {
+            saveFile = new PrintStream(new RobocodeFileOutputStream(argFile));
+        } catch (IOException e) {
+            System.out.println("*** Could not create output stream for NN save file.");
+        }
+
+        // First line is the number of rows of data
+        assert saveFile != null;
+        saveFile.println(myEnergy * enemyEnergy * DistanceToEnemy * DistanceToCenter * ActionSize);
+
+        // Second line is the number of dimensions per row
+        saveFile.println(5);
+
+        System.out.println("start writing");
+
+        for (int a = 0; a < myEnergy; a++) {
+            for (int b = 0; b < enemyEnergy; b++) {
+                for (int c = 0; c < DistanceToEnemy; c++) {
+                    for (int d = 0; d < DistanceToCenter; d++) {
+                        for (int e = 0; e < ActionSize; e++) {
+                            // e, d, e2, d2, a, q, visits
+                            String row = String.format("%d,%d,%d,%d,%d,%2.5f,%d",
+                                    a, b, c, d, e,
+                                    LUT[a][b][c][d][e],
+                                    visits[a][b][c][d][e]
+                            );
+                            saveFile.println(row);
+                        }
+                    }
+                }
+            }
+        }
+        saveFile.close();
+        System.out.println("finish saving");
     }
 
     @Override

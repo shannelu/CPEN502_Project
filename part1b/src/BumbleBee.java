@@ -51,25 +51,26 @@ public class BumbleBee extends AdvancedRobot {
 
     // RL learning parameters
     private double gamma = 0.9;
-    private double alpha = 0.0;  // 0.1
-    private double epsilon = 0.0;
+    private double alpha = 0.0;  // learning rate: 0.1
+    private double epsilon = 0.0; // exploration rate: 0.0, 0.1, 0.2, 0.5, 0.8
+    private boolean offPolicy = true; // true for Q-leaning, false for Sarsa
 
     // reward
     private double currentReward = 0.0;
-    private double negativeReward = -0.1;
-    private double positiveReward = 0.5;
+    private double negativeReward = -0.1;  // set to 0 when only consider terminal
+    private double positiveReward = 0.5;   // set to 0 when only consider terminal
     private double negativeTerminalRewards = -0.2;
     private double positiveTerminalRewards = 1.0;
 
     // number of round
     static int TotalRound = 0;
-    static int Totalwins = 0;
+    static int TotalWins = 0;
     static int round = 0;
 
     // Logging
-    static String logFilename = "BumbleBeeLUT_benchmark.log";
+    static String logFilename = "benchmark.log";
     static LogFile log = new LogFile();
-
+    static String LUTdataFilename = getClass().getSimpleName() + ".txt";
 
 
 
@@ -88,10 +89,7 @@ public class BumbleBee extends AdvancedRobot {
 
 
 
-
-
         while(true){
-//            System.out.println("current operationMode is"+ operationMode);
             switch (operationMode){
                 case performScan:{
                     currentReward = 0.0;
@@ -111,7 +109,6 @@ public class BumbleBee extends AdvancedRobot {
                                 getEnumDistOf(DistanceToCenter).ordinal()
                         )];
                     }
-//                    System.out.println("current action is"+ currentAction);
                     switch (currentAction){
                         case attack:
                             setRadarColor(Color.red);
@@ -155,7 +152,7 @@ public class BumbleBee extends AdvancedRobot {
                         prevAction.ordinal()
                 };
 
-                double QValue = getQ(currentReward);
+                double QValue = getQValue(currentReward,offPolicy);
                 LUT.train(X, QValue);
                 operationMode = enumOperationMode.performScan;
                 execute();
@@ -163,24 +160,15 @@ public class BumbleBee extends AdvancedRobot {
         }
     }
 
-    public double getQ(double currentReward){
+    public double getQValue(double currentReward, boolean offPolicy){
 
         // for sarsa on policy
-//        double currentQValue = LUT.getValueFromLUT(
-//                myCurrentEnergy.ordinal(),
-//                enemyCurrentEnergy.ordinal(),
-//                currentDisToEnemy.ordinal(),
-//                currentDisToCenter.ordinal(),
-//                currentAction.ordinal()
-//        );
-
-        // for q-learning off policy
-        double prevQValue = LUT.getValueFromLUT(
-                myPrevEnergy.ordinal(),
-                enemyPrevEnergy.ordinal(),
-                prevDisToEnemy.ordinal(),
-                prevDisToCenter.ordinal(),
-                prevAction.ordinal()
+        double currentQValue = LUT.getValueFromLUT(
+                myCurrentEnergy.ordinal(),
+                enemyCurrentEnergy.ordinal(),
+                currentDisToEnemy.ordinal(),
+                currentDisToCenter.ordinal(),
+                currentAction.ordinal()
         );
 
         int GreedyMove = LUT.getGreedyMove(
@@ -190,6 +178,7 @@ public class BumbleBee extends AdvancedRobot {
                 currentDisToCenter.ordinal()
         );
 
+        // for q-learning off policy
         double maxQValue = LUT.getValueFromLUT(
                 myCurrentEnergy.ordinal(),
                 enemyCurrentEnergy.ordinal(),
@@ -198,9 +187,24 @@ public class BumbleBee extends AdvancedRobot {
                 GreedyMove
         );
 
-        // Q learning
-        double newQ = prevQValue + alpha * (currentReward + gamma * maxQValue - prevQValue);
-        return newQ;
+        double prevQValue = LUT.getValueFromLUT(
+                myPrevEnergy.ordinal(),
+                enemyPrevEnergy.ordinal(),
+                prevDisToEnemy.ordinal(),
+                prevDisToCenter.ordinal(),
+                prevAction.ordinal()
+        );
+
+        double newQValue;
+        // Q-learning (off-policy)
+        if(offPolicy){
+            newQValue = prevQValue + alpha * (currentReward + gamma * maxQValue - prevQValue);
+        }else {
+            // Sarsa (on-policy)
+            newQValue = prevQValue + alpha * (currentReward + gamma * currentQValue - prevQValue);
+        }
+
+        return newQValue;
     }
 
 
@@ -252,7 +256,6 @@ public class BumbleBee extends AdvancedRobot {
      */
     @Override
     public void onScannedRobot(ScannedRobotEvent e){
-//        System.out.println("im executing onscannedrobot function");
         super.onScannedRobot(e);
         myX = getX();
         myY = getY();
@@ -294,6 +297,11 @@ public class BumbleBee extends AdvancedRobot {
     }
 
     @Override
+    public void onBulletMissed(BulletMissedEvent event) {
+        currentReward += negativeReward;
+    }
+
+    @Override
     public void onHitRobot(HitRobotEvent event) {
         currentReward += negativeReward;
         setBack(200);
@@ -310,6 +318,18 @@ public class BumbleBee extends AdvancedRobot {
         execute();
     }
 
+
+    public void saveToLog() {
+        if ((TotalRound % 100 == 0) && (TotalRound != 0)) {
+            double winPercentage = (double) TotalWins / 100;
+            System.out.println(String.format("%d, %.3f", ++round, winPercentage));
+            File folderDst1 = getDataFile(logFilename);
+            log.writeToFile(folderDst1, winPercentage, round);
+            TotalWins = 0;
+        }
+    }
+
+
     @Override
     public void onWin(WinEvent event) {
         currentReward = positiveTerminalRewards;
@@ -323,21 +343,12 @@ public class BumbleBee extends AdvancedRobot {
                 prevAction.ordinal()
         };
 
-        double QValue = getQ(currentReward);
+        double QValue = getQValue(currentReward,offPolicy);
         LUT.train(X, QValue);
 
-        Totalwins++;
+        TotalWins++;
         TotalRound++;
-        if((TotalRound % 100 == 0) && (TotalRound != 0)){
-            double winPercentage = (double) Totalwins / 100;
-            System.out.println(String.format("%d, %.3f",++round, winPercentage));
-            File folderDst1 = getDataFile(logFilename);
-            log.writeToFile(folderDst1, winPercentage, round);
-            Totalwins = 0;
-            //saveTable();
-        }
-
-
+        saveToLog();
     }
 
     @Override
@@ -353,18 +364,12 @@ public class BumbleBee extends AdvancedRobot {
                 prevAction.ordinal()
         };
 
-        double QValue = getQ(currentReward);
+        double QValue = getQValue(currentReward, offPolicy);
         LUT.train(X, QValue);
 
         TotalRound++;
-        if((TotalRound % 100 == 0) && (TotalRound != 0)){
-            double winPercentage = (double) Totalwins / 100;
-            System.out.println(String.format("%d, %.3f",++round, winPercentage));
-            File folderDst1 = getDataFile(logFilename);
-            log.writeToFile(folderDst1, winPercentage, round);
-            Totalwins = 0;
-            //saveTable();
-        }
+        saveToLog();
+        LUT.save(getDataFile(LUTdataFilename));
     }
 
 
