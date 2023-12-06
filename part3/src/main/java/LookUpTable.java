@@ -62,8 +62,18 @@ public class LookUpTable implements LUTInterface{
     }
 
     @Override
-    public double outputFor(double[] X) {
-        return 0;
+    public double outputFor(double[] x) {
+        if (x.length != 5)
+            throw new ArrayIndexOutOfBoundsException();
+        else {
+            int a = (int) x[0];
+            int b = (int) x[1];
+            int c = (int) x[2];
+            int d = (int) x[3];
+            int e = (int) x[4];
+            return LUT[a][b][c][d][e];
+        }
+//        return 0;
     }
 
     @Override

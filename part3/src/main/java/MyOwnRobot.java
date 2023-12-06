@@ -3,7 +3,6 @@ package main.java;
 import robocode.*;
 
 import java.awt.*;
-import java.io.File;
 
 public class MyOwnRobot extends AdvancedRobot {
 
@@ -70,9 +69,9 @@ public class MyOwnRobot extends AdvancedRobot {
     static int round = 0;
 
     // Logging
-    static String logFilename = "benchmark-fire.log";
-    static LogFile log = new LogFile();
-    static String LUTDataFilename = "LUT-fire.txt";
+//    static String logFilename = "benchmark-first.log";
+//    static LogFile log = new LogFile();
+    static String LUTDataFilename = "LUT-first.txt";
 
 
 
@@ -321,15 +320,15 @@ public class MyOwnRobot extends AdvancedRobot {
     }
 
 
-    public void saveToLog() {
-        if ((TotalRound % 100 == 0) && (TotalRound != 0)) {
-            double winPercentage = (double) TotalWins / 100;
-            System.out.println(String.format("%d, %.3f", ++round, winPercentage));
-            File folderDst1 = getDataFile(logFilename);
-            log.writeToFile(folderDst1, winPercentage, round);
-            TotalWins = 0;
-        }
-    }
+//    public void saveToLog() {
+//        if ((TotalRound % 100 == 0) && (TotalRound != 0)) {
+//            double winPercentage = (double) TotalWins / 100;
+//            System.out.println(String.format("%d, %.3f", ++round, winPercentage));
+//            File folderDst1 = getDataFile(logFilename);
+//            log.writeToFile(folderDst1, winPercentage, round);
+//            TotalWins = 0;
+//        }
+//    }
 
 
     @Override
@@ -350,7 +349,7 @@ public class MyOwnRobot extends AdvancedRobot {
 
         TotalWins++;
         TotalRound++;
-        saveToLog();
+//        saveToLog();
         LUT.save(getDataFile(LUTDataFilename));
     }
 
@@ -371,7 +370,7 @@ public class MyOwnRobot extends AdvancedRobot {
         LUT.train(X, QValue);
 
         TotalRound++;
-        saveToLog();
+//        saveToLog();
         LUT.save(getDataFile(LUTDataFilename));
     }
 

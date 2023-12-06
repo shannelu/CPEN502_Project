@@ -56,7 +56,7 @@ public class main {
 //                epochList.add(epoch);
 //            } while (error_threshold < errorSum);
 //            totalEpoch +=epoch;
-//            if( j%20 == 0){
+//            if(j%20 == 0){
 //                plt1.plot().add(epochList, errorList).label("Trial" + j);
 //            }
 //        }

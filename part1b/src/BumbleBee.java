@@ -70,7 +70,7 @@ public class BumbleBee extends AdvancedRobot {
     // Logging
     static String logFilename = "benchmark.log";
     static LogFile log = new LogFile();
-    static String LUTdataFilename = getClass().getSimpleName() + ".txt";
+    static String LUTDataFilename = "LUT.txt";
 
 
 
@@ -349,6 +349,7 @@ public class BumbleBee extends AdvancedRobot {
         TotalWins++;
         TotalRound++;
         saveToLog();
+        LUT.save(getDataFile(LUTDataFilename));
     }
 
     @Override
@@ -369,7 +370,7 @@ public class BumbleBee extends AdvancedRobot {
 
         TotalRound++;
         saveToLog();
-        LUT.save(getDataFile(LUTdataFilename));
+        LUT.save(getDataFile(LUTDataFilename));
     }
 
 

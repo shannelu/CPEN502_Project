@@ -14,10 +14,6 @@ public class NeuralNet implements NeuralNetInterface {
 
     private boolean binary = true; // true for binary, false for bipolar
 
-
-
-
-
     //weights matrix for each layer
     double[][] w1 = new double[NumInputs+1][NumHidden+1]; // add 1 for bias
     double[][] w2 = new double[NumHidden+1][NumOutputs];
@@ -212,23 +208,6 @@ public class NeuralNet implements NeuralNetInterface {
         }
         backPropagation();
         return Error[0]; // hardcode as the number of output is 1
-//        int epoch = 0;
-//        double errorSum;
-//        do{
-//            errorSum = 0;
-//            for(int j=0; j<X.length; j++){
-//                forwardPropagation(X);
-//                for(int i=0; i<NumOutputs; i++){ // NumOutputs is 1 in this example
-//                    Error[i] = argValue - outputLayer[i];
-//                    errorSum += Math.pow(Error[i], 2) / 2;  // E = 1/2 * SUM(C-y)^2
-//                }
-//                backPropagation();
-//                epoch++;
-////            return Error[0]; // hardcode as the number of output is 1
-//            }
-//        } while(errorSum > error_threshold);
-//        System.out.printf("error sum value is %d\n", epoch);
-//        return errorSum;
     }
 
 
