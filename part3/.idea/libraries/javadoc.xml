@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="javadoc">
+    <CLASSES />
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/../part1b/robocode/javadoc" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>
