@@ -1,18 +1,43 @@
 package main.java;
-
-import robocode.RobocodeFileWriter;
+import robocode.RobocodeFileOutputStream;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 
+/**
+ * @author sarbjit
+ * {@docRoot}
+ * @version 0.1
+ * This class implements a file logging mechanism. It is meant to enable
+ * diagnostic data to be written from a robocode tank to a file.
+ */
 public class LogFile {
-    public void writeToFile(File fileToWrite, double winRate, int roundCount) {
-        try{
-            RobocodeFileWriter fileWriter = new RobocodeFileWriter(fileToWrite.getAbsolutePath(), true);
-            fileWriter.write(roundCount + " " + Double.toString(winRate) + "\r\n");
-            fileWriter.close();
-        }
-        catch(Exception e){
-            System.out.println(e);
+
+    /**
+     * Private members of this class
+     */
+    public PrintStream stream;
+
+    /**
+     * Constructor.
+     * @param argFile The file created by Robocode into which to write data
+     *      */
+    public LogFile ( File argFile ) {
+        try {
+            stream = new PrintStream( new RobocodeFileOutputStream( argFile ));
+            System.out.println( "--+ Log file created." );
+        } catch (IOException e) {
+            System.out.println( "*** IO exception during file creation attempt.");
         }
     }
-}
+
+    public void print( String argString ) {
+        stream.print( argString );
+    }
+
+    public void println( String argString ) {
+        stream.println( argString );
+    }
+
+} // End of public class LogFile

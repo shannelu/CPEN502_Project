@@ -191,13 +191,10 @@ public class NeuralNet implements NeuralNetInterface {
     @Override
     public double outputFor(double [] X){
         // TODO: not used for part 1a
-        if(Error[0] < error_threshold){
-            return outputLayer[0];
-        } else{
-            System.out.println("The neural net is not trained well yet.\n");
-            return 0.0;
-        }
+        forwardPropagation(X);
+        return outputLayer[0];
     }
+
 
     @Override
     // train the neutral net for one dataset

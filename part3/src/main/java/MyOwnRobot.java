@@ -71,7 +71,7 @@ public class MyOwnRobot extends AdvancedRobot {
     // Logging
 //    static String logFilename = "benchmark-first.log";
 //    static LogFile log = new LogFile();
-    static String LUTDataFilename = "LUT-first.txt";
+    static String LUTDataFilename = "LUT-fire.txt";
 
 
 
@@ -91,6 +91,7 @@ public class MyOwnRobot extends AdvancedRobot {
 
 
         while(true){
+            if(TotalRound > 8000) epsilon=0;
             switch (operationMode){
                 case performScan:{
                     currentReward = 0.0;
@@ -154,6 +155,8 @@ public class MyOwnRobot extends AdvancedRobot {
                 };
 
                 double QValue = getQValue(currentReward,offPolicy);
+//                double[] xScaledOneHotEncoded = downScaleVector(oneHotVectorFor(X));
+//                LUT.train(xScaledOneHotEncoded, QValue);
                 LUT.train(X, QValue);
                 operationMode = enumOperationMode.performScan;
                 execute();
@@ -345,6 +348,8 @@ public class MyOwnRobot extends AdvancedRobot {
         };
 
         double QValue = getQValue(currentReward,offPolicy);
+//        double[] xScaledOneHotEncoded = downScaleVector(oneHotVectorFor(X));
+//        LUT.train(xScaledOneHotEncoded, QValue);
         LUT.train(X, QValue);
 
         TotalWins++;
@@ -367,6 +372,8 @@ public class MyOwnRobot extends AdvancedRobot {
         };
 
         double QValue = getQValue(currentReward, offPolicy);
+//        double[] xScaledOneHotEncoded = downScaleVector(oneHotVectorFor(X));
+//        LUT.train(xScaledOneHotEncoded, QValue);
         LUT.train(X, QValue);
 
         TotalRound++;
