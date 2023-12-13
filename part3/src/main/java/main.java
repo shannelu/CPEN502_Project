@@ -5,10 +5,9 @@ import com.github.sh0nk.matplotlib4j.PythonConfig;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static main.java.Utils.intToBinaryArray;
 
 
 public class main {
@@ -23,19 +22,20 @@ public class main {
         plt = Plot.create(PythonConfig.pythonBinPathConfig("/usr/bin/python3"));
         plt.xlabel("Epoch");
         plt.ylabel("RMSE");
-        plt.title("RMSE vs. Number of Epochs with Different Numbers of Hidden Neurons");
+        plt.title("RMSE vs. Number of Epochs with Different Number of Hidden Neurons"); //Number of Hidden Neurons
 
-//        double[] learningRates = {0.005, 0.001, 0.01, 0.1,0.2}; // 0.0001
-        int[] numHidden = {10,20,40,50}; // 200
-//        double[] momentum = {0.0, 0.1, 0.5,0.9, 1}; //0.9
+//        double[] learningRates = {0.001, 0.005, 0.01, 0.1}; // 0.005
+        int[] numHidden = {10,20,30 ,40,50}; //20
+//        double[] momentum = {0.0, 0.01, 0.1,0.5,0.7,0.9}; //0.1
         LookUpTable lut = new LookUpTable(5,5,5,5,5);
         lut.load("out/production/part3/main/java/MyOwnRobot.data/LUT-fire.txt");
         for (int m: numHidden) {
-            train(lut, 0.001, m, 0.9, numTrials);
+            train(lut,0.005, m,0.1, numTrials);
+
         }
 //        }
         plt.legend();
-        plt.savefig("./figures/RMSE-hidden.png");
+        plt.savefig("./figures/RMSE-lr.png");
         plt.show();
     }
 
@@ -44,9 +44,9 @@ public class main {
         for (int i = 0; i < numTrials; i++) {
             epochs.clear();
             losses.clear();
-            NeuralNet nn = new NeuralNet(5,numHidden,1,lr, momentum, false);
+            NeuralNet nn = new NeuralNet(9,numHidden,1,lr, momentum, false);
             nn.initializeWeights();
-            int maxEpochs = 200;
+            int maxEpochs = 1000;
             int epoch = 0;
             double rmsError = 1.0;
             for (; epoch < maxEpochs; epoch++) {
@@ -57,10 +57,30 @@ public class main {
                         for (int c = 0; c < 5; c++) {
                             for (int d = 0; d < 5; d++) {
                                 for (int e = 0; e < 5; e++) {
-                                    double[] input = quantizedToNoneQuantized(a, b, c, d, e);
-                                    double qValue = lut.outputFor(new double[]{a, b, c, d, e});
-//                                    double normalizedQ = 2 * (qValue - minMaxQ[0]) / (minMaxQ[1] - minMaxQ[0]) - 1;
-                                    totalSquaredError += Math.pow(nn.train(input, qValue),2);
+                                    double[] scaledX = intToBinaryArray(e);
+                                    double[] input = new double[]{
+                                            quantizedToNoneQuantized.get(a),
+                                            quantizedToNoneQuantized.get(b),
+                                            quantizedToNoneQuantized.get(c),
+                                            quantizedToNoneQuantized.get(d),
+                                            scaledX[0],
+                                            scaledX[1],
+                                            scaledX[2],
+                                            scaledX[3],
+                                            scaledX[4]
+                                    };
+//                                    double[] input = new double[]{
+//                                            quantizedToNoneQuantized.get(a),
+//                                            quantizedToNoneQuantized.get(b),
+//                                            quantizedToNoneQuantized.get(c),
+//                                            quantizedToNoneQuantized.get(d),
+//                                            e
+//                                    };
+
+                                    double qValue = (lut.outputFor(new double[]{a, b, c, d, e}));
+                                    double normalizedQ = 2 * (qValue - minMaxQ[0]) / (minMaxQ[1] - minMaxQ[0]) - 1;
+//                                    double normalizedQ = (qValue - minMaxQ[0]) / (minMaxQ[1] - minMaxQ[0]);
+                                    totalSquaredError += Math.pow(nn.train(input, normalizedQ),2);
                                     totalInputs++;
                                 }
                             }
@@ -81,30 +101,55 @@ public class main {
 //                }
             }
             System.out.println("Trial " + i + ": Current error is " + rmsError + ", Epoch: " + epoch);
-            plt.plot().add(epochs, losses).label("NumOfHiddenNeurons = " + numHidden);
+            plt.plot().add(epochs, losses).label("NumOfHidden =" + numHidden);
         }
     }
 
 
-    public static double[] quantizedToNoneQuantized(int a, int b, int c, int d, int e) {
-        Map<Integer, Double> normalizedEnergy = new HashMap<>(){{
-            put(0, 0.0);
-            put(1, 20.0);
-            put(2, 40.0);
-            put(3, 60.0);
-            put(4, 80.0);
-        }};
+    static Map<Integer, Double> quantizedToNoneQuantized = new HashMap<Integer, Double>(){{
+        put(0, 0.2);
+        put(1, 0.4);
+        put(2, 0.6);
+        put(3, 0.8);
+        put(4, 1.0);
+    }};
 
-        Map<Integer, Double> normalizedDist = new HashMap<>(){{
-            put(0, 100.0);
-            put(1, 300.0);
-            put(2, 500.0);
-            put(3, 700.0);
-            put(4, 900.0);
-        }};
-
-        return new double[]{normalizedEnergy.get(a), normalizedEnergy.get(b), normalizedDist.get(c), normalizedDist.get(d), e};
-    }
+//    public static double[] quantizedToNoneQuantized(int a, int b, int c, int d, int e) {
+//        Random random = new Random();
+//        // Generate a random number:
+////        double rD1 = random.nextInt(101); // 0 - 100
+////        double rD2 = random.nextInt(201)+100;  // 100-300
+////        double rD3 = random.nextInt(201)+300; // 300-500
+////        double rD4 = random.nextInt(201)+500; //500-700
+////        double rD5 = random.nextInt(301)+700; // 700-1000
+//        Map<Integer, Double> normalizedEnergy = new HashMap<>(){{
+////            put(0, 0.0);
+////            put(1, 20.0);
+////            put(2, 40.0);
+////            put(3, 60.0);
+////            put(4, 80.0);
+//            put(0, 0.2);
+//            put(1, 0.4);
+//            put(2, 0.6);
+//            put(3, 0.8);
+//            put(4, 1.0);
+//        }};
+//
+//        Map<Integer, Double> normalizedDist = new HashMap<>(){{
+////            put(0, rD1);
+////            put(1, rD2);
+////            put(2, rD3);
+////            put(3, rD4);
+////            put(4, rD5);
+//            put(0, 0.2);
+//            put(1, 0.4);
+//            put(2, 0.6);
+//            put(3, 0.8);
+//            put(4, 1.0);
+//        }};
+//
+//        return new double[]{normalizedEnergy.get(a), normalizedEnergy.get(b), normalizedDist.get(c), normalizedDist.get(d), e};
+//    }
 
     public static double[] findMinMaxQ(double[][][][][] lut) {
         double minQ = Double.POSITIVE_INFINITY;
@@ -157,18 +202,17 @@ public class main {
 ////        hiddenNeuronPlot(15,0.001,0.0);
 ////        hiddenNeuronPlot(20,0.001,0.0);
 //
-////        // learning rate
-////        hiddenNeuronPlot(10,0.001,0.0);
-////        hiddenNeuronPlot(10,0.005,0.0);
-////        hiddenNeuronPlot(10,0.01,0.0);
-////        hiddenNeuronPlot(10,0.2,0.0);
-////        hiddenNeuronPlot(10,0.5,0.0);
-//
-//        // number of neuron
-//        hiddenNeuronPlot(10,0.01,0.0);
+//        // learning rate
+//        hiddenNeuronPlot(20,0.001,0.0);
+//        hiddenNeuronPlot(20,0.005,0.0);
 //        hiddenNeuronPlot(20,0.01,0.0);
-//        hiddenNeuronPlot(40,0.01,0.0);
-//        hiddenNeuronPlot(50,0.01,0.0);
+//        hiddenNeuronPlot(20,0.2,0.0);
+//
+////        // number of neuron
+////        hiddenNeuronPlot(10,0.01,0.0);
+////        hiddenNeuronPlot(20,0.01,0.0);
+////        hiddenNeuronPlot(40,0.01,0.0);
+////        hiddenNeuronPlot(50,0.01,0.0);
 //
 //        // momentum
 //

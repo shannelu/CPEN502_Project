@@ -18,7 +18,7 @@ public class NNRobot extends AdvancedRobot {
     static int numHidden = 20;
     static double lr = 0.001;
     static double momentum =0.9; //0.0
-    static private NeuralNet nn = new NeuralNet(numInput, numHidden,1, lr, momentum, false);
+    static NeuralNet nn = new NeuralNet(numInput, numHidden,1, lr, momentum, false);
 
     // my state
     public double myX = 0.0;
@@ -70,6 +70,12 @@ public class NNRobot extends AdvancedRobot {
     static int RoundsPer100 =0;
     // Win rate counter: winRate[0] = # of wins in rounds 1-100, winRate[1] = # of wins in rounds 101-200, etc
     static int[] winRate = new int[10000];
+
+    /**
+     * Create replay memory to train more than 1 sample at a time step
+     */
+    static int memSize = 10;
+    static ReplayMemory<Experience> replayMemory = new ReplayMemory<>(memSize);
 
 
     // Logging
@@ -233,6 +239,27 @@ public class NNRobot extends AdvancedRobot {
         return newQValue;
     }
 
+
+    public void replayExperience(ReplayMemory rm){
+        int memorySize = rm.sizeOf();
+        int requestedSampleSize = Math.min(memorySize, memSize);
+
+        Object[] sample = rm.randomSample(requestedSampleSize);
+        for(Object item:sample){
+            Experience exp = (Experience) item;
+
+            double[] x = new double[]{
+                    exp.currentReward,
+                    exp.myPrevEnergy,
+                    exp.enemyPrevEnergy,
+                    exp.prevDisToEnemy,
+                    exp.prevDisToCenter,
+                    exp.prevAction.ordinal()};
+
+            double[] xScaledOneHotEncoded = oneHotVectorFor(x);
+            nn.train(xScaledOneHotEncoded, getQValue(currentReward, offPolicy));
+        }
+    }
 
     public double getDistFromCenter(double myX, double myY, double centerX, double centerY){
         double dist = Math.sqrt(Math.pow(myX - centerX, 2) + Math.pow(myY - centerY, 2));

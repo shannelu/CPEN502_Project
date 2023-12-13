@@ -11,7 +11,7 @@ public class MyOwnRobot extends AdvancedRobot {
     public enum enumAction {attack, forward, backward, left, right}
     public enum enumOperationMode {performScan, performAction}
 
-    static private LookUpTable LUT= new LookUpTable(
+    static LookUpTable LUT= new LookUpTable(
             enumEnergy.values().length,
             enumEnergy.values().length,
             enumDistance.values().length,
