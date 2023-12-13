@@ -9,45 +9,33 @@ package main.java;
  * - Current state
  */
 public class Experience {
-    public double myPrevEnergy;
-    public double enemyPrevEnergy;
-    public double prevDisToEnemy;
-    public double prevDisToCenter;
-    public NNRobot.enumAction prevAction;
-    public double currentReward;
+    /**
+     * Experience stored in replay memory
+     * - Previous state
+     * - Previous action
+     * - Current reward
+     * - Current state
+     */
+        public State prevState;
+        public replayNNRobot.enumAction prevAction;
+        public double currentReward;
+        public State currentState;
 
-    public double myCurrentEnergy;
-    public double enemyCurrentEnergy;
-    public double currentDisToEnemy;
-    public double currentDisToCenter;
-    public NNRobot.enumAction currentAction;
+        // Constructor
+        public Experience(State prevState, replayNNRobot.enumAction prevAction, double currentReward, State currentState) {
+            this.prevState = prevState;
+            this.prevAction = prevAction;
+            this.currentReward = currentReward;
+            this.currentState = currentState;
+        }
 
-
-
-    // Constructor
-    public Experience(double currentReward, double myPrevEnergy, double enemyPrevEnergy, double prevDisToEnemy, double prevDisToCenter,
-                      NNRobot.enumAction prevAction, double myCurrentEnergy, double enemyCurrentEnergy, double currentDisToEnemy,
-                      double currentDisToCenter, NNRobot.enumAction currentAction) {
-//        this.prevState = prevState;
-//        this.prevAction = prevAction;
-//        this.currReward = currReward;
-//        this.currState = currState;
-
-        this.currentReward = currentReward;
-
-        this.myPrevEnergy = myPrevEnergy;
-        this.enemyPrevEnergy = enemyPrevEnergy;
-        this.prevDisToEnemy = prevDisToEnemy;
-        this.prevDisToCenter = prevDisToCenter;
-        this.prevAction = prevAction;
-
-        this.myCurrentEnergy = myCurrentEnergy;
-        this.enemyCurrentEnergy = enemyCurrentEnergy;
-        this.currentDisToEnemy = currentDisToEnemy;
-        this.currentDisToCenter = currentDisToCenter;
-        this.currentAction = currentAction;
-    }
-
-
+        // Convert to string
+        @Override
+        public String toString() {
+            return "[Prev State:" + prevState + "][" +
+                    "Prev Action:" + prevAction + "][" +
+                    "Curr Reward:" + currentReward + "][" +
+                    "Curr State:" + currentState + "]";
+        }
 
 }

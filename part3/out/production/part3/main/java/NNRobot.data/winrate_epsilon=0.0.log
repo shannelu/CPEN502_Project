@@ -1,0 +1,53 @@
+Start writing log
+gamma,   0.90
+alpha,   0.10
+epsilon, 0.00
+0 - 100  win rate, 2
+100 - 200  win rate, 2
+200 - 300  win rate, 2
+300 - 400  win rate, 1
+400 - 500  win rate, 2
+500 - 600  win rate, 1
+600 - 700  win rate, 1
+700 - 800  win rate, 4
+800 - 900  win rate, 0
+900 - 1000  win rate, 1
+1000 - 1100  win rate, 2
+1100 - 1200  win rate, 1
+1200 - 1300  win rate, 2
+1300 - 1400  win rate, 1
+1400 - 1500  win rate, 0
+1500 - 1600  win rate, 0
+1600 - 1700  win rate, 0
+1700 - 1800  win rate, 1
+1800 - 1900  win rate, 1
+1900 - 2000  win rate, 0
+2000 - 2100  win rate, 3
+2100 - 2200  win rate, 1
+2200 - 2300  win rate, 4
+2300 - 2400  win rate, 1
+2400 - 2500  win rate, 1
+2500 - 2600  win rate, 1
+2600 - 2700  win rate, 0
+2700 - 2800  win rate, 1
+2800 - 2900  win rate, 1
+2900 - 3000  win rate, 1
+3000 - 3100  win rate, 0
+3100 - 3200  win rate, 0
+3200 - 3300  win rate, 2
+3300 - 3400  win rate, 1
+3400 - 3500  win rate, 0
+3500 - 3600  win rate, 0
+3600 - 3700  win rate, 0
+3700 - 3800  win rate, 0
+3800 - 3900  win rate, 1
+3900 - 4000  win rate, 1
+4000 - 4100  win rate, 0
+4100 - 4200  win rate, 2
+4200 - 4300  win rate, 3
+4300 - 4400  win rate, 1
+4400 - 4500  win rate, 0
+4500 - 4600  win rate, 0
+4600 - 4700  win rate, 0
+4700 - 4800  win rate, 1
+4800 - 4900  win rate, 0

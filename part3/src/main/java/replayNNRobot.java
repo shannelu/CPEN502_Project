@@ -7,9 +7,9 @@ import java.util.Random;
 
 import static main.java.Utils.oneHotVectorFor;
 
-public class NNRobot extends AdvancedRobot {
+public class replayNNRobot extends AdvancedRobot {
 
-//    public enum enumEnergy {zero, low, average, high, highest} // for myEnergy and enemyEnergy
+    //    public enum enumEnergy {zero, low, average, high, highest} // for myEnergy and enemyEnergy
 //    public enum enumDistance {closest, close, medium, far, farthest}  // for DistanceToEnemy and DistanceToCenter
     public enum enumAction {attack, forward, backward, left, right}
     public enum enumOperationMode {performScan, performAction}
@@ -34,26 +34,12 @@ public class NNRobot extends AdvancedRobot {
     public double centerX = 0.0;
     public double centerY = 0.0;
 
-    // CurrentState Initialization
-    private double myCurrentEnergy = 100;
-    private double enemyCurrentEnergy = 100;
-    private double currentDisToEnemy = 500;
-    private double currentDisToCenter = 500;
-    private enumAction currentAction = enumAction.forward;
-    private enumOperationMode operationMode = enumOperationMode.performScan;
 
-
-    // PreviousState Initialization
-    private double myPrevEnergy = 100;
-    private double enemyPrevEnergy = 100;
-    private double prevDisToEnemy = 500;
-    private double prevDisToCenter = 500;
-    private enumAction prevAction = enumAction.forward;
 
     // RL learning parameters
     private double gamma = 0.9;  // 0.2, 0.5, 0.7, 0.9
     private double alpha = 0.1;  // learning rate: 0.1
-    private double epsilon = 0.2; // exploration rate: 0.0, 0.1, 0.2, 0.5, 0.8
+    private double epsilon = 0.1; // exploration rate: 0.0, 0.1, 0.2, 0.5, 0.8
     private boolean offPolicy = true; // true for Q-leaning, false for Sarsa
 
     // reward
@@ -78,6 +64,19 @@ public class NNRobot extends AdvancedRobot {
     static int memSize = 10;
     static ReplayMemory<Experience> replayMemory = new ReplayMemory<>(memSize);
 
+    // CurrentState Initialization
+    public State currentState = new State(100.0, 100.0, 500.0, 500.0);
+    public enumAction currentAction = enumAction.forward;
+    public enumOperationMode operationMode = enumOperationMode.performScan;
+
+    // PreviousState Initialization
+    public State prevState = new State(100.0, 100.0, 500.0, 500.0);
+    public enumAction prevAction = enumAction.forward;
+
+
+
+
+
 
     // Logging
 //    static String logFilename = "nnrobot-winrate.log";
@@ -86,7 +85,7 @@ public class NNRobot extends AdvancedRobot {
 
     // Logging
 //    static String logFilename = "winrate_epsilon=0.0.log";
-    static String logFilename = "rewards_epsilon=0.2.log";
+    static String logFilename = "replay_memSize=10.log";
     static LogFile log = null;
 
 
@@ -178,16 +177,18 @@ public class NNRobot extends AdvancedRobot {
                 }
                 // Update previous Q
                 double[] X = new double[]{
-                        myPrevEnergy,
-                        enemyPrevEnergy,
-                        prevDisToEnemy,
-                        prevDisToCenter,
+                        prevState.myEnergy,
+                        prevState.enemyEnergy,
+                        prevState.distToEnemy,
+                        prevState.distToCenter,
                         prevAction.ordinal()
                 };
 
-                double QValue = getQValue(currentReward,offPolicy);
-                double[] xScaledOneHotEncoded = oneHotVectorFor(X);
-                nn.train(xScaledOneHotEncoded, QValue);
+//                double QValue = getQValue(currentReward,offPolicy);
+//                double[] xScaledOneHotEncoded = oneHotVectorFor(X);
+//                nn.train(xScaledOneHotEncoded, QValue);
+                replayMemory.add((new Experience(prevState,prevAction,currentReward,currentState)));
+                replayExperience(replayMemory);
                 operationMode = enumOperationMode.performScan;
                 execute();
             }
@@ -198,34 +199,34 @@ public class NNRobot extends AdvancedRobot {
 
         // for sarsa on policy
         double currentQValue = nn.outputFor(oneHotVectorFor(new double[]{
-                myCurrentEnergy,
-                enemyCurrentEnergy,
-                currentDisToEnemy,
-                currentDisToCenter,
+                currentState.myEnergy,
+                currentState.enemyEnergy,
+                currentState.distToEnemy,
+                currentState.distToCenter,
                 currentAction.ordinal()})
         );
 
         int GreedyMove = bestAction(
-                myCurrentEnergy,
-                enemyCurrentEnergy,
-                currentDisToEnemy,
-                currentDisToCenter
+                currentState.myEnergy,
+                currentState.enemyEnergy,
+                currentState.distToEnemy,
+                currentState.distToCenter
         );
 
         // for q-learning off policy
         double maxQValue = nn.outputFor(oneHotVectorFor(new double[]{
-                myCurrentEnergy,
-                enemyCurrentEnergy,
-                currentDisToEnemy,
-                currentDisToCenter,
+                currentState.myEnergy,
+                currentState.enemyEnergy,
+                currentState.distToEnemy,
+                currentState.distToCenter,
                 GreedyMove})
         );
 
         double prevQValue = nn.outputFor(oneHotVectorFor(new double[]{
-                myPrevEnergy,
-                enemyPrevEnergy,
-                prevDisToEnemy,
-                prevDisToCenter,
+                prevState.myEnergy,
+                prevState.enemyEnergy,
+                prevState.distToEnemy,
+                prevState.distToCenter,
                 prevAction.ordinal()})
         );
 
@@ -239,6 +240,27 @@ public class NNRobot extends AdvancedRobot {
         }
 
         return newQValue;
+    }
+
+
+    public void replayExperience(ReplayMemory rm){
+        int memorySize = rm.sizeOf();
+        int requestedSampleSize = Math.min(memorySize, memSize);
+
+        Object[] sample = rm.randomSample(requestedSampleSize);
+        for(Object item:sample){
+            Experience exp = (Experience) item;
+
+            double[] x = new double[]{
+                    exp.prevState.myEnergy,
+                    exp.prevState.enemyEnergy,
+                    exp.prevState.distToEnemy,
+                    exp.prevState.distToCenter,
+                    exp.prevAction.ordinal()};
+
+            double[] xScaledOneHotEncoded = oneHotVectorFor(x);
+            nn.train(xScaledOneHotEncoded, getQValue(exp.currentReward, offPolicy));
+        }
     }
 
     public double getDistFromCenter(double myX, double myY, double centerX, double centerY){
@@ -263,18 +285,18 @@ public class NNRobot extends AdvancedRobot {
         myEnergy = getEnergy();
 
         // Update previous state
-        myPrevEnergy = myCurrentEnergy;
-        enemyPrevEnergy = enemyCurrentEnergy;
-        prevDisToEnemy = currentDisToEnemy;
-        prevDisToCenter = currentDisToCenter;
+        prevState.myEnergy = currentState.myEnergy;
+        prevState.enemyEnergy = currentState.enemyEnergy;
+        prevState.distToEnemy = currentState.distToEnemy;
+        prevState.distToCenter = currentState.distToCenter;
         prevAction = currentAction;
         operationMode = enumOperationMode.performAction;
 
-         //Update current state
-        myCurrentEnergy = getEnergy();
-        enemyCurrentEnergy = e.getEnergy();
-        currentDisToEnemy = e.getDistance();
-        currentDisToCenter = getDistFromCenter(myX,myY,centerX,centerY);
+        //Update current state
+        currentState.myEnergy = getEnergy();
+        currentState.enemyEnergy = e.getEnergy();
+        currentState.distToEnemy = e.getDistance();
+        currentState.distToCenter = getDistFromCenter(myX,myY,centerX,centerY);
         operationMode = enumOperationMode.performAction;
     }
 
@@ -316,32 +338,6 @@ public class NNRobot extends AdvancedRobot {
     }
 
 
-//    public void saveToLog() {
-//        if ((TotalRound % 100 == 0) && (TotalRound != 0)) {
-//            double winPercentage = (double) TotalWins / 100;
-//            System.out.println(String.format("%d, %.3f", ++round, winPercentage));
-//            File folderDst1 = getDataFile(logFilename);
-//            log.writeToFile(folderDst1, winPercentage, round);
-//            TotalWins = 0;
-//        }
-//    }
-
-//    public void saveStats(int[] winArr) {
-//        try {
-//            File winRatesFile = getDataFile("WinRate.txt");
-//            PrintStream out = new PrintStream(new RobocodeFileOutputStream(winRatesFile));
-//            out.format("Win rate, %d/%d = %d\n", TotalWins, TotalRound, TotalWins*100/TotalRound);
-//            out.format("Every 100 Rounds, Wins,\n");
-//            for (int i = 0; i < (getRoundNum() + 1) / 100; i++) {
-//                out.format("%d, %d,\n", i + 1, winArr[i]);
-//            }
-//            out.close();
-//        } catch (IOException exception) {
-//            exception.printStackTrace();
-//        }
-//    }
-
-
     @Override
     public void onWin(WinEvent event) {
         currentReward += positiveTerminalRewards;
@@ -349,27 +345,27 @@ public class NNRobot extends AdvancedRobot {
 
         // update previous Q
         double[] X = new double[]{
-                myPrevEnergy,
-                enemyPrevEnergy,
-                prevDisToEnemy,
-                prevDisToCenter,
+                prevState.myEnergy,
+                prevState.enemyEnergy,
+                prevState.distToEnemy,
+                prevState.distToCenter,
                 prevAction.ordinal()
         };
 
-        double QValue = getQValue(currentReward,offPolicy);
-        double[] xScaledOneHotEncoded = oneHotVectorFor(X);
-        nn.train(xScaledOneHotEncoded, QValue);
+        replayMemory.add(new Experience(prevState, prevAction, currentReward, currentState));
+        replayExperience(replayMemory);
 
-        // stats
+//        double QValue = getQValue(currentReward,offPolicy);
+//        double[] xScaledOneHotEncoded = oneHotVectorFor(X);
+//        nn.train(xScaledOneHotEncoded, QValue);
+
         if (RoundsPer100 < 100) {
             RoundsPer100++;
             TotalRound++;
-            WinsPer100++;
         } else {
 //            log.stream.println(WinsPer100 / RoundsPer100);
-//            System.out.printf("%d - %d  win rate, %2.1f\n", TotalRound - 100, TotalRound, 100*WinsPer100 / RoundsPer100);
-//            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound, 100*WinsPer100 / RoundsPer100);
-            log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
+            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
+//            log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
             log.stream.flush();
             RoundsPer100 = 0;
             WinsPer100 = 0;
@@ -385,30 +381,33 @@ public class NNRobot extends AdvancedRobot {
 
         // update previous Q
         double[] X = new double[]{
-                myPrevEnergy,
-                enemyPrevEnergy,
-                prevDisToEnemy,
-                prevDisToCenter,
+                prevState.myEnergy,
+                prevState.enemyEnergy,
+                prevState.distToEnemy,
+                prevState.distToCenter,
                 prevAction.ordinal()
         };
+        replayMemory.add(new Experience(prevState, prevAction, currentReward, currentState));
+        replayExperience(replayMemory);
 
-        double QValue = getQValue(currentReward, offPolicy);
-        double[] xScaledOneHotEncoded = oneHotVectorFor(X);
-        nn.train(xScaledOneHotEncoded, QValue);
+//        double QValue = getQValue(currentReward, offPolicy);
+//        double[] xScaledOneHotEncoded = oneHotVectorFor(X);
+//        nn.train(xScaledOneHotEncoded, QValue);
 
         if (RoundsPer100 < 100) {
             RoundsPer100++;
             TotalRound++;
         } else {
 //            log.stream.println(WinsPer100 / RoundsPer100);
-//            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
-            log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
+            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
+//            log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
             log.stream.flush();
             RoundsPer100 = 0;
             WinsPer100 = 0;
             RewardsPer100 = 0;
 //            TotalRound++;
         }
+
     }
 
     public int selectRandomAction(){
