@@ -5,9 +5,10 @@ import com.github.sh0nk.matplotlib4j.PythonConfig;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 
 import java.io.IOException;
-import java.util.*;
-
-import static main.java.Utils.intToBinaryArray;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class main {
@@ -24,13 +25,14 @@ public class main {
         plt.ylabel("RMSE");
         plt.title("RMSE vs. Number of Epochs with Different Number of Hidden Neurons"); //Number of Hidden Neurons
 
-//        double[] learningRates = {0.001, 0.005, 0.01, 0.1}; // 0.005
-        int[] numHidden = {10,20,30 ,40,50}; //20
-//        double[] momentum = {0.0, 0.01, 0.1,0.5,0.7,0.9}; //0.1
+//        double[] learningRates = {0.0001, 0.0005,0.001, 0.005,0.1}; // 0.001
+//        double[] learningRates = {0.001, 0.005, 0.01};
+        int[] numHidden = {10,20,30,50}; //20
+//        double[] momentum = {0.0, 0.01, 0.1,0.5,0.9}; //0.9
         LookUpTable lut = new LookUpTable(5,5,5,5,5);
         lut.load("out/production/part3/main/java/MyOwnRobot.data/LUT-fire.txt");
         for (int m: numHidden) {
-            train(lut,0.005, m,0.1, numTrials);
+            train(lut,0.001,m,0.9, numTrials);
 
         }
 //        }
@@ -44,9 +46,9 @@ public class main {
         for (int i = 0; i < numTrials; i++) {
             epochs.clear();
             losses.clear();
-            NeuralNet nn = new NeuralNet(9,numHidden,1,lr, momentum, false);
+            NeuralNet nn = new NeuralNet(5,numHidden,1,lr, momentum, false);
             nn.initializeWeights();
-            int maxEpochs = 1000;
+            int maxEpochs = 200;
             int epoch = 0;
             double rmsError = 1.0;
             for (; epoch < maxEpochs; epoch++) {
@@ -57,51 +59,45 @@ public class main {
                         for (int c = 0; c < 5; c++) {
                             for (int d = 0; d < 5; d++) {
                                 for (int e = 0; e < 5; e++) {
-                                    double[] scaledX = intToBinaryArray(e);
-                                    double[] input = new double[]{
-                                            quantizedToNoneQuantized.get(a),
-                                            quantizedToNoneQuantized.get(b),
-                                            quantizedToNoneQuantized.get(c),
-                                            quantizedToNoneQuantized.get(d),
-                                            scaledX[0],
-                                            scaledX[1],
-                                            scaledX[2],
-                                            scaledX[3],
-                                            scaledX[4]
-                                    };
+//                                    double[] scaledX = intToBinaryArray(e);
 //                                    double[] input = new double[]{
 //                                            quantizedToNoneQuantized.get(a),
 //                                            quantizedToNoneQuantized.get(b),
 //                                            quantizedToNoneQuantized.get(c),
 //                                            quantizedToNoneQuantized.get(d),
-//                                            e
+//                                            scaledX[0],
+//                                            scaledX[1],
+//                                            scaledX[2],
+//                                            scaledX[3],
+//                                            scaledX[4]
 //                                    };
+                                    double[] input = new double[]{
+                                            quantizedToNoneQuantized.get(a),
+                                            quantizedToNoneQuantized.get(b),
+                                            quantizedToNoneQuantized.get(c),
+                                            quantizedToNoneQuantized.get(d),
+                                            e
+                                    };
 
                                     double qValue = (lut.outputFor(new double[]{a, b, c, d, e}));
-                                    double normalizedQ = 2 * (qValue - minMaxQ[0]) / (minMaxQ[1] - minMaxQ[0]) - 1;
+//                                    double normalizedQ = 2 * (qValue - minMaxQ[0]) / (minMaxQ[1] - minMaxQ[0]) - 1;
 //                                    double normalizedQ = (qValue - minMaxQ[0]) / (minMaxQ[1] - minMaxQ[0]);
-                                    totalSquaredError += Math.pow(nn.train(input, normalizedQ),2);
+                                    totalSquaredError += Math.pow(nn.train(input, qValue),2);
                                     totalInputs++;
                                 }
                             }
                         }
                     }
                 }
-//                System.out.println(totalSquaredError);
                 rmsError = Math.sqrt(totalSquaredError / totalInputs);
 //                if (rmsError < errorThreshold) {
 //                    break;
 //                }
                 epochs.add(epoch);
                 losses.add(rmsError);
-//                if (epoch % 5 == 0) {
-//                    map.put(epoch, rmsError);
-//                    List<Integer> epochs = new ArrayList<>();
-//                    List<Double> losses = new ArrayList<>();
-//                }
             }
             System.out.println("Trial " + i + ": Current error is " + rmsError + ", Epoch: " + epoch);
-            plt.plot().add(epochs, losses).label("NumOfHidden =" + numHidden);
+            plt.plot().add(epochs, losses).label("numHidden =" + numHidden);
         }
     }
 

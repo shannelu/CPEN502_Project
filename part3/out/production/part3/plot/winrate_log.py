@@ -25,7 +25,7 @@ def extract_data_from_log(file_path):
 # File paths for the log files
 file_paths = [
     '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9_gamma0.3.log',
-    '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9_gamma0.9.log',
+    '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9.log',
     '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9_gamma0.7.log',
     # '../../out/production/part3/main/java/NNRobot.data/winrate_epsilon0.1.log',
     # '../../out/production/part3/main/java/NNRobot.data/winrate_epsilon0.2.log'

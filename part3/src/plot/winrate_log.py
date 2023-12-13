@@ -24,25 +24,23 @@ def extract_data_from_log(file_path):
 
 # File paths for the log files
 file_paths = [
-    '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9_gamma0.3.log',
-    '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9_gamma0.9.log',
-    '../../out/production/part3/main/java/NNRobot.data/winrate_momentum0.9_gamma0.7.log',
+    '../../out/production/part3/main/java/NNRobot.data/gamma=0.3.log',
+    '../../out/production/part3/main/java/NNRobot.data/gamma=0.7.log',
+    '../../out/production/part3/main/java/NNRobot.data/gamma=0.9.log'
     # '../../out/production/part3/main/java/NNRobot.data/winrate_epsilon0.1.log',
     # '../../out/production/part3/main/java/NNRobot.data/winrate_epsilon0.2.log'
 ]
 
 plt.figure(figsize=(10, 6))
 
-# for file_path in file_paths:
-#     epoch_midpoints, win_rates = extract_data_from_log(file_path)
-#     plt.plot(epoch_midpoints, win_rates, label=file_path)
 
 for file_path in file_paths:
     # Extract file name from the file path
     file_name = os.path.basename(file_path)
     print(file_name)
     epoch_midpoints, win_rates = extract_data_from_log(file_path)
-    plt.plot(epoch_midpoints, win_rates, label=file_name)
+    label_name = file_name.replace('.log', '')
+    plt.plot(epoch_midpoints, win_rates, label=label_name)
 
 plt.title('Win Rate vs Epoch with different gamma')
 plt.xlabel('Epoch')

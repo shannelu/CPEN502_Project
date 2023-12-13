@@ -84,7 +84,7 @@ public class NNRobot extends AdvancedRobot {
 //    static String LUTDataFilename = "LUT-first.txt";
 
     // Logging
-    static String logFilename = "winrate_momentum0.9_gamma0.5.log";
+    static String logFilename = "winrate_momentum0.9_gamma0.9.log";
     static LogFile log = null;
 
 
