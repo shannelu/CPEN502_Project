@@ -53,7 +53,7 @@ public class MyOwnRobot extends AdvancedRobot {
     // RL learning parameters
     private double gamma = 0.9;
     private double alpha = 0.1;  // learning rate: 0.1
-    private double epsilon = 0.0; // exploration rate: 0.0, 0.1, 0.2, 0.5, 0.8
+    private double epsilon = 0.1; // exploration rate: 0.0, 0.1, 0.2, 0.5, 0.8
     private boolean offPolicy = true; // true for Q-leaning, false for Sarsa
 
     // reward

@@ -18,7 +18,7 @@ public class Utils {
         return scaledVector;
     }
 
-    public static double[] intToBinaryArray(int value) {
+    public static double[] IntToBiArray(int value) {
         if (value < 0 || value > 4) {
             System.out.println("Value should be between 0 and 4");
             return null;

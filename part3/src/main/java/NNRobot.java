@@ -316,32 +316,6 @@ public class NNRobot extends AdvancedRobot {
     }
 
 
-//    public void saveToLog() {
-//        if ((TotalRound % 100 == 0) && (TotalRound != 0)) {
-//            double winPercentage = (double) TotalWins / 100;
-//            System.out.println(String.format("%d, %.3f", ++round, winPercentage));
-//            File folderDst1 = getDataFile(logFilename);
-//            log.writeToFile(folderDst1, winPercentage, round);
-//            TotalWins = 0;
-//        }
-//    }
-
-//    public void saveStats(int[] winArr) {
-//        try {
-//            File winRatesFile = getDataFile("WinRate.txt");
-//            PrintStream out = new PrintStream(new RobocodeFileOutputStream(winRatesFile));
-//            out.format("Win rate, %d/%d = %d\n", TotalWins, TotalRound, TotalWins*100/TotalRound);
-//            out.format("Every 100 Rounds, Wins,\n");
-//            for (int i = 0; i < (getRoundNum() + 1) / 100; i++) {
-//                out.format("%d, %d,\n", i + 1, winArr[i]);
-//            }
-//            out.close();
-//        } catch (IOException exception) {
-//            exception.printStackTrace();
-//        }
-//    }
-
-
     @Override
     public void onWin(WinEvent event) {
         currentReward += positiveTerminalRewards;
@@ -366,8 +340,6 @@ public class NNRobot extends AdvancedRobot {
             TotalRound++;
             WinsPer100++;
         } else {
-//            log.stream.println(WinsPer100 / RoundsPer100);
-//            System.out.printf("%d - %d  win rate, %2.1f\n", TotalRound - 100, TotalRound, 100*WinsPer100 / RoundsPer100);
 //            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound, 100*WinsPer100 / RoundsPer100);
             log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
             log.stream.flush();
@@ -400,14 +372,11 @@ public class NNRobot extends AdvancedRobot {
             RoundsPer100++;
             TotalRound++;
         } else {
-//            log.stream.println(WinsPer100 / RoundsPer100);
-//            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
             log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
             log.stream.flush();
             RoundsPer100 = 0;
             WinsPer100 = 0;
             RewardsPer100 = 0;
-//            TotalRound++;
         }
     }
 

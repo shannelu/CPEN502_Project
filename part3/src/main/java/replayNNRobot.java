@@ -55,14 +55,13 @@ public class replayNNRobot extends AdvancedRobot {
     static int WinsPer100 = 0;
     static int RoundsPer100 =0;
     static double RewardsPer100 = 0.0;
-    // Win rate counter: winRate[0] = # of wins in rounds 1-100, winRate[1] = # of wins in rounds 101-200, etc
     static int[] winRate = new int[10000];
 
     /**
      * Create replay memory to train more than 1 sample at a time step
      */
     static int memSize = 10;
-    static ReplayMemory<Experience> replayMemory = new ReplayMemory<>(memSize);
+    static ReplayMemory<Experience> rm = new ReplayMemory<>(memSize);
 
     // CurrentState Initialization
     public State currentState = new State(100.0, 100.0, 500.0, 500.0);
@@ -74,20 +73,9 @@ public class replayNNRobot extends AdvancedRobot {
     public enumAction prevAction = enumAction.forward;
 
 
-
-
-
-
     // Logging
-//    static String logFilename = "nnrobot-winrate.log";
-//    LogFile log = new LogFile(getDataFile(logFilename));
-//    static String LUTDataFilename = "LUT-first.txt";
-
-    // Logging
-//    static String logFilename = "winrate_epsilon=0.0.log";
     static String logFilename = "replay_memSize=10.log";
     static LogFile log = null;
-
 
 
     @Override
@@ -105,13 +93,7 @@ public class replayNNRobot extends AdvancedRobot {
 
         // Create log file
         if (log == null) {
-            System.out.print("!!!*********************!!!");
-            System.out.print(logFilename);
             log = new LogFile(getDataFile(logFilename));
-            log.stream.printf("Start writing log\n");
-            log.stream.printf("gamma,   %2.2f\n", gamma);
-            log.stream.printf("alpha,   %2.2f\n", alpha);
-            log.stream.printf("epsilon, %2.2f\n", epsilon);
         }
 
         if(!NNinitialized){
@@ -184,11 +166,8 @@ public class replayNNRobot extends AdvancedRobot {
                         prevAction.ordinal()
                 };
 
-//                double QValue = getQValue(currentReward,offPolicy);
-//                double[] xScaledOneHotEncoded = oneHotVectorFor(X);
-//                nn.train(xScaledOneHotEncoded, QValue);
-                replayMemory.add((new Experience(prevState,prevAction,currentReward,currentState)));
-                replayExperience(replayMemory);
+                rm.add((new Experience(prevState,prevAction,currentReward,currentState)));
+                replayExperience(rm);
                 operationMode = enumOperationMode.performScan;
                 execute();
             }
@@ -247,7 +226,7 @@ public class replayNNRobot extends AdvancedRobot {
         int memorySize = rm.sizeOf();
         int requestedSampleSize = Math.min(memorySize, memSize);
 
-        Object[] sample = rm.randomSample(requestedSampleSize);
+        Object[] sample = rm.sample(requestedSampleSize);
         for(Object item:sample){
             Experience exp = (Experience) item;
 
@@ -269,16 +248,13 @@ public class replayNNRobot extends AdvancedRobot {
     }
 
 
-    /**
-     * Fire when we see a robot
-     */
+
     @Override
     public void onScannedRobot(ScannedRobotEvent e){
         super.onScannedRobot(e);
 
         myX = getX();
         myY = getY();
-//        myHeading = getHeading();
         enemyBearing = e.getBearing();
         DistanceToEnemy = e.getDistance();
         enemyEnergy = e.getEnergy();
@@ -301,10 +277,7 @@ public class replayNNRobot extends AdvancedRobot {
     }
 
 
-    /**
-     * We were hit!  Turn perpendicular to the bullet,
-     * so our seesaw might avoid a future shot.
-     */
+
     @Override
     public void onHitByBullet(HitByBulletEvent e) {
         currentReward += negativeReward;
@@ -343,29 +316,19 @@ public class replayNNRobot extends AdvancedRobot {
         currentReward += positiveTerminalRewards;
         RewardsPer100 += currentReward;
 
-        // update previous Q
-        double[] X = new double[]{
-                prevState.myEnergy,
-                prevState.enemyEnergy,
-                prevState.distToEnemy,
-                prevState.distToCenter,
-                prevAction.ordinal()
-        };
+        rm.add(new Experience(prevState, prevAction, currentReward, currentState));
+        replayExperience(rm);
 
-        replayMemory.add(new Experience(prevState, prevAction, currentReward, currentState));
-        replayExperience(replayMemory);
-
-//        double QValue = getQValue(currentReward,offPolicy);
-//        double[] xScaledOneHotEncoded = oneHotVectorFor(X);
-//        nn.train(xScaledOneHotEncoded, QValue);
 
         if (RoundsPer100 < 100) {
             RoundsPer100++;
             TotalRound++;
+            WinsPer100++;
         } else {
-//            log.stream.println(WinsPer100 / RoundsPer100);
-            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
-//            log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
+            // win rate
+            log.stream.printf("%d - %d, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
+            // rewards
+//            log.stream.printf("%d - %d, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
             log.stream.flush();
             RoundsPer100 = 0;
             WinsPer100 = 0;
@@ -379,28 +342,18 @@ public class replayNNRobot extends AdvancedRobot {
         currentReward += negativeTerminalRewards;
         RewardsPer100 += currentReward;
 
-        // update previous Q
-        double[] X = new double[]{
-                prevState.myEnergy,
-                prevState.enemyEnergy,
-                prevState.distToEnemy,
-                prevState.distToCenter,
-                prevAction.ordinal()
-        };
-        replayMemory.add(new Experience(prevState, prevAction, currentReward, currentState));
-        replayExperience(replayMemory);
 
-//        double QValue = getQValue(currentReward, offPolicy);
-//        double[] xScaledOneHotEncoded = oneHotVectorFor(X);
-//        nn.train(xScaledOneHotEncoded, QValue);
+        rm.add(new Experience(prevState, prevAction, currentReward, currentState));
+        replayExperience(rm);
 
         if (RoundsPer100 < 100) {
             RoundsPer100++;
             TotalRound++;
         } else {
-//            log.stream.println(WinsPer100 / RoundsPer100);
-            log.stream.printf("%d - %d  win rate, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
-//            log.stream.printf("%d - %d  rewards, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
+            // win rate
+            log.stream.printf("%d - %d, %d\n", TotalRound - 100, TotalRound,  100*WinsPer100 / RoundsPer100);
+            // rewards
+//            log.stream.printf("%d - %d, %f\n", TotalRound - 100, TotalRound,  RewardsPer100 / RoundsPer100);
             log.stream.flush();
             RoundsPer100 = 0;
             WinsPer100 = 0;
